@@ -51,9 +51,36 @@
   </head>
   <body class="bg-dark text-light justify-center items-center h-screen">
     <div class="flex flex-col lg:flex-row w-full h-full">
+      <select
+        id="tag-select"
+        class="bg-light text-dark w-1/5 h-10 rounded-lg p-3 lg:fixed lg:block top-0 left-0 hidden"
+        autocomplete="off"
+        _="
+        on change
+          if event.target.value is 'all' then
+            show .channel in #card-container
+          else
+            set tagClass to '.tag-' + event.target.value
+            hide .channel in #card-container
+            show .channel in #card-container when it matches tagClass
+          end
+      "
+      >
+        <option value="all" selected>Tout voir</option>
+        <optgroup label="Langue">
+          <option value="fr">En français 🇫🇷</option>
+          <option value="en">En anglais 🇬🇧</option>
+        </optgroup>
+        <optgroup label="Contenu">
+          <option value="films">Films 🎬</option>
+          <option value="series">Séries 📀</option>
+          <option value="shows">Emissions 📺</option>
+          <option value="anime">Animation 🎨</option>
+        </optgroup>
+      </select>
       <div
         id="cards-layout"
-        class="mb-1 lg:mb-6 lg:w-1/5 lg:h-full overflow-x-auto lg:overflow-y-auto"
+        class="lg:mt-10 lg:mb-0 mb-1 lg:w-1/5 overflow-x-auto lg:overflow-y-auto"
         _="init send loadData"
       >
         <div id="card-container" class="flex flex-row lg:flex-col"></div>

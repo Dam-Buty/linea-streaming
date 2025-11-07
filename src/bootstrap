@@ -1,0 +1,72 @@
+#!/usr/bin/env node
+
+const fs = require("fs");
+const path = require("path");
+const { intro, outro, spinner } = require("@clack/prompts");
+const color = require("picocolors");
+const { script } = require("./lib/script");
+
+const DATA_JSON_PATH = path.join(__dirname, "www", "data.json");
+const CHANNELS_DIR = path.join(__dirname, "data", "channels");
+
+const introText = `
+This script compiles all channel configuration files into a single data file.
+It will read all JSON files from ${color.yellow(
+  "/data/channels"
+)} and compile them into ${color.yellow("data.json")}
+`;
+
+script(async function bootstrap() {
+  intro(introText);
+
+  const s = spinner();
+
+  try {
+    // Delete existing data.json if it exists
+    if (fs.existsSync(DATA_JSON_PATH)) {
+      s.start("Deleting existing data.json...");
+      fs.unlinkSync(DATA_JSON_PATH);
+      s.stop("Deleted existing data.json");
+    }
+
+    // Read all JSON files from channels directory
+    s.start("Reading channel files...");
+    const channels = [];
+    const files = fs.readdirSync(CHANNELS_DIR);
+
+    for (const file of files) {
+      // Only process .json files (exclude .example files)
+      if (file.endsWith(".json") && !file.includes(".example")) {
+        const filePath = path.join(CHANNELS_DIR, file);
+        s.message(`Reading ${color.cyan(file)}`);
+
+        try {
+          const content = fs.readFileSync(filePath, "utf8");
+          const channelData = JSON.parse(content);
+          channels.push(channelData);
+        } catch (err) {
+          s.stop(`${color.red("✗")} Error reading ${file}: ${err.message}`);
+          s.start("Continuing...");
+        }
+      }
+    }
+
+    s.stop(`Read ${color.green(channels.length)} channel(s)`);
+
+    // Write compiled data to data.json
+    s.start("Writing compiled data...");
+    fs.writeFileSync(DATA_JSON_PATH, JSON.stringify(channels, null, 2), {
+      mode: 0o644,
+    });
+    s.stop("Compiled data written to data.json");
+
+    outro(
+      `${color.green("✓")} Bootstrap complete! ${color.cyan(
+        channels.length
+      )} channels compiled.`
+    );
+  } catch (err) {
+    s.stop(`${color.red("✗")} Error during bootstrap: ${err.message}`);
+    process.exit(1);
+  }
+});

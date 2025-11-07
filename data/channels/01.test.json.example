@@ -1,0 +1,25 @@
+{
+  "id": "test",
+  "title": "📺 Test Channel with remote videos",
+  "image": "https://picsum.photos/700/500",
+  "startTime": 1726073578,
+  "description": "🎤 one two one two",
+  "shuffle": false,
+  "videos": [
+    {
+      "title": "Big Buck Bunny",
+      "duration": 596,
+      "url": "https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
+    },
+    {
+      "title": "Elephant's dream",
+      "duration": 654,
+      "url": "https://storage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4"
+    },
+    {
+      "title": "Tears of Steel",
+      "duration": 734,
+      "url": "https://storage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4"
+    }
+  ]
+}

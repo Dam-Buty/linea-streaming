@@ -1,0 +1,123 @@
+#!/usr/bin/env node
+
+const path = require("path");
+const _ = require("lodash");
+const { intro, multiselect, log, outro } = require("@clack/prompts");
+const color = require("picocolors");
+const { readdirSync, statSync, copyFileSync } = require("fs");
+
+const { ffmpegConvertToWebp } = require("./lib/ffmpeg");
+const { isFile, getHumanReadableSize } = require("./lib/files");
+const { incoming, covers } = require("./lib/paths");
+const { script, exitOnCancel } = require("./lib/script");
+
+const convertibleFormats = ["jpg", "jpeg", "png", "gif", "bmp", "tiff", "tif"];
+
+const copiedImageFormats = ["webp"];
+
+const isSupportedImage = (fileName) =>
+  convertibleFormats.some((ext) =>
+    fileName.toLowerCase().endsWith(`.${ext}`)
+  ) ||
+  copiedImageFormats.some((ext) => fileName.toLowerCase().endsWith(`.${ext}`));
+
+const isConvertibleImage = (fileName) =>
+  convertibleFormats.some((ext) => fileName.toLowerCase().endsWith(`.${ext}`));
+
+const introText = `
+This script is used to process image files. Before you run it, please make sure that:
+* You have dropped the images in the ${color.yellow("/incoming")} volume
+* Non-webp images will be ${color.green("converted")} to webp format
+* Webp images will be ${color.green("copied as-is")}
+* All images will be saved in the ${color.yellow("/data/covers")} directory
+`;
+
+script(async function convertImages() {
+  intro(introText);
+
+  // store all files with an image extension in /incoming in a availableImages array
+  const availableImages = _.chain(readdirSync(incoming))
+    .filter(isFile())
+    .filter(isSupportedImage)
+    .map((fileName) => {
+      const fileStats = statSync(path.join(incoming, fileName));
+
+      return {
+        path: path.join(incoming, fileName),
+        fileName: fileName,
+        bytes: fileStats.size,
+        size: getHumanReadableSize(fileStats.size),
+        toConvert: isConvertibleImage(fileName),
+      };
+    })
+    .value();
+
+  if (availableImages.length === 0) {
+    log.error("No images found in the incoming directory.");
+    process.exit(1);
+  }
+
+  const maxSize = _.maxBy(availableImages, (image) => image.size.length).size
+    .length;
+
+  const selectedImages = await multiselect({
+    message: "Select images to convert to webp.",
+    options: availableImages.map((image) => ({
+      value: image,
+      label: ["🖼️", image.size.padStart(maxSize, " "), image.fileName].join(
+        " | "
+      ),
+    })),
+    initialValues: availableImages.map((image) => image.path),
+  });
+
+  exitOnCancel(selectedImages);
+
+  const totalSize = _.sumBy(selectedImages, "bytes");
+
+  log.step(
+    `${selectedImages.length} images selected. (${getHumanReadableSize(
+      totalSize
+    )})`
+  );
+
+  let currentImageIndex = 0;
+  const successfulConversions = [];
+  const failedConversions = [];
+
+  for (let image of selectedImages) {
+    currentImageIndex++;
+
+    log.step(
+      `${currentImageIndex}/${selectedImages.length} - Converting ${color.green(
+        image.fileName
+      )}`
+    );
+
+    try {
+      if (image.toConvert) {
+        await ffmpegConvertToWebp(covers, image.path, image.fileName);
+      } else {
+        copyFileSync(image.path, path.join(covers, image.fileName));
+      }
+      successfulConversions.push(image);
+    } catch (err) {
+      console.error(err);
+      failedConversions.push(image);
+    }
+  }
+
+  if (failedConversions.length > 0) {
+    log.warn(
+      `⚠️  ${
+        failedConversions.length
+      } image(s) failed to convert: ${failedConversions
+        .map((p) => p.fileName)
+        .join(", ")}`
+    );
+  }
+
+  outro(
+    `✅ ${successfulConversions.length} image(s) have been processed and saved to ${covers}`
+  );
+});

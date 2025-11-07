@@ -1,5 +1,5 @@
 on loadData
-  fetch /data/data.json as json with cache:"no-store" then
+  fetch /data.json as json with cache:"no-store" then
     set global channels to result
     template()
     get localStorage.lastChannel
@@ -46,10 +46,15 @@ end
 
 def template()
   for channel in channels
+    if channel.tags exists then
+      set tagClasses to channel.tags.map( \ tag -> `tag-${tag}`).join(" ")
+    else
+      set tagClasses to ""
+    end
     if channel.link exists
       put `
 
-        <a href="${channel.link}" target="_blank" class="block">
+        <a href="${channel.link}" target="_blank" class="block ${tagClasses} channel">
           <div 
             class=
               "cursor-alias p-2 rounded-lg opacity-70 hover:opacity-90 bg-[url('${channel.image}')] bg-contain"
@@ -70,7 +75,7 @@ def template()
       put `
       <div 
         class=
-          "cursor-pointer p-2 rounded-lg opacity-70 hover:opacity-90 bg-[url('${channel.image}')] bg-contain"
+          "cursor-pointer p-2 rounded-lg opacity-70 hover:opacity-90 bg-[url('${channel.image}')] bg-contain channel ${tagClasses}"
         title="${channel.description}" _="on click zap('${channel.id}')"
       >
         <div class="h-4/5 lg:h-full w-full lg:w-4/5 mt-[50%] lg:mt-0 lg:ml-[20%] text-xl lg:text-2xl font-bold text-dark bg-light text-right p-2 rounded-lg">${channel.title}</div>

@@ -1,0 +1,146 @@
+#!/usr/bin/env node
+
+const { intro, outro, log, select, text } = require("@clack/prompts");
+const ffprobe = require("ffprobe-client");
+const { readdirSync } = require("fs");
+const path = require("path");
+const fs = require("fs");
+const color = require("picocolors");
+
+const { isFile, isImage, isVideo, isDirectory } = require("./lib/files");
+const { incoming, videos, channels, covers } = require("./lib/paths");
+const { script, exitOnCancel } = require("./lib/script");
+const { videosBaseUrl, streamingBaseUrl } = require("./lib/environment");
+
+const introText = `This script is used to process video files and create a playlist for streaming.
+Before starting, make sure that you have :
+* Dropped a cover image in the ${color.yellow(
+  "/incoming"
+)} volume (.webp format)
+* Mounted the ${color.yellow(
+  "/data/videos"
+)} volume to where the videos are stored
+)}
+`;
+
+const streamingBaseUrlOrLocal = streamingBaseUrl || "";
+const videosBaseUrlOrLocal = videosBaseUrl || streamingBaseUrl || "";
+
+console.log({ streamingBaseUrlOrLocal, videosBaseUrlOrLocal });
+
+script(async function playlist() {
+  intro(introText);
+
+  const playlistId = await text({
+    message: "Enter the ID (short name) of the playlist",
+  });
+
+  exitOnCancel(playlistId);
+
+  const playlistTitle = await text({
+    message: "Enter the display title of the playlist",
+  });
+
+  exitOnCancel(playlistTitle);
+
+  const playlistDescription = await text({
+    message: "Provide a description for your playlist",
+  });
+
+  exitOnCancel(playlistDescription);
+
+  const availableCoverImages = readdirSync(incoming)
+    .filter(isFile(incoming))
+    .filter(isImage);
+
+  let coverPicture = await select({
+    message: "Select a cover picture for your playlist.",
+    options: [
+      { value: "external", label: ["🔗", "Use an external image"].join(" | ") },
+      ...availableCoverImages.map((imageName) => ({
+        value: imageName,
+        label: ["🖼️", imageName].join(" | "),
+      })),
+    ],
+  });
+
+  exitOnCancel(coverPicture);
+
+  if (coverPicture === "external") {
+    coverPicture = await text({
+      message: "Enter the URL of the external image",
+    });
+
+    exitOnCancel(coverPicture);
+  }
+
+  const remoteFolders = readdirSync(videos).filter(isDirectory(videos));
+
+  let videoFolder = await select({
+    message: "Select video folder.",
+    options: [
+      ...remoteFolders.map((folderName) => ({
+        value: path.join(videos, folderName),
+        label: ["📂", folderName.split("/").pop()].join(" | "),
+      })),
+    ],
+  });
+
+  exitOnCancel(videoFolder);
+
+  const availableVideos = readdirSync(videoFolder)
+    .filter(isFile(videoFolder))
+    .filter(isVideo);
+
+  let currentVideoIndex = 0;
+  const playlistVideos = [];
+
+  for (let videoFilename of availableVideos) {
+    currentVideoIndex++;
+
+    log.step(
+      `${currentVideoIndex}/${availableVideos.length} - Probing ${videoFilename
+        .split("/")
+        .pop()}`
+    );
+
+    try {
+      const probeInfo = await ffprobe(path.join(videoFolder, videoFilename));
+
+      playlistVideos.push({
+        title: path.basename(videoFilename, path.extname(videoFilename)),
+        duration: parseInt(probeInfo.format.duration),
+        url: `${videosBaseUrlOrLocal}/videos/${playlistId}/${videoFilename}`,
+      });
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  if (!coverPicture.startsWith("http")) {
+    fs.copyFileSync(
+      path.join(incoming, coverPicture),
+      path.join(covers, coverPicture)
+    );
+
+    coverPicture = `${streamingBaseUrlOrLocal}/covers/${coverPicture}`;
+  }
+
+  const playlist = {
+    id: playlistId,
+    title: playlistTitle,
+    image: coverPicture,
+    description: playlistDescription,
+    startTime: Date.now() / 1000,
+    videos: playlistVideos,
+  };
+
+  fs.writeFileSync(
+    path.join(channels, `${playlistId}.json`),
+    JSON.stringify(playlist, null, 2)
+  );
+
+  outro(
+    `✅ ${availableVideos.length} videos have been added to the ${playlistId} playlist`
+  );
+});

@@ -1,0 +1,12 @@
+FROM node:23-alpine
+
+RUN apk add --no-cache ffmpeg
+
+WORKDIR /src
+
+COPY package.json .
+RUN npm install
+
+COPY ./src .
+
+CMD ["bootstrap"]

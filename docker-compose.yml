@@ -1,0 +1,50 @@
+version: "3.3"
+services:
+  processor:
+    image: linea-processor
+    user: "${UID:-1000}:${GID:-1000}"
+    tty: true
+    stdin_open: true
+    volumes:
+      - "./data:/src/data"
+      - "./incoming:/src/incoming"
+      - "./data/videos:/src/videos"
+      - "./www:/src/www"
+    # environment:
+    #   - LINEA_STREAMING_BASE_URL=https://tv.lazone.at
+    #   - LINEA_VIDEOS_BASE_URL=https://lazone.bourlypokertour.fr
+
+  web:
+    image: sebp/lighttpd
+    ports:
+      - "8066:80"
+    depends_on:
+      processor:
+        condition: service_completed_successfully
+    volumes:
+      - "./lighttpd/cache:/var/cache/lighttpd/compress"
+      - "./lighttpd/config:/etc/lighttpd"
+      - "./lighttpd/logs:/var/log/lighttpd"
+      # Web Page
+      - "./www/index.html:/var/www/localhost/htdocs/index.html"
+      - "./www/index._hs:/var/www/localhost/htdocs/index._hs"
+      - "./www/images:/var/www/localhost/htdocs/images"
+      # Data
+      - "./www/data.json:/var/www/localhost/htdocs/data.json"
+      - "./data/covers:/var/www/localhost/htdocs/covers"
+      - "./data/videos:/var/www/localhost/htdocs/videos"
+    restart: no
+
+    # networks:
+    #   - traefik-network
+    # labels:
+    #   - "traefik.enable=true"
+    #   - "traefik.http.services.testtv.loadbalancer.server.port=80"
+    #   # Router
+    #   - "traefik.http.routers.testtv.rule=Host(`testtv.lazone.at`)"
+    #   - "traefik.http.routers.testtv.entrypoints=websecure"
+    #   - "traefik.http.routers.testtv.tls=true"
+    #   - "traefik.http.routers.testtv.tls.certresolver=letsencrypt"
+# networks:
+#   traefik-network:
+#     external: true

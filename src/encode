@@ -1,0 +1,134 @@
+#!/usr/bin/env node
+
+const path = require("path");
+const _ = require("lodash");
+const { intro, multiselect, log, select, text } = require("@clack/prompts");
+const color = require("picocolors");
+const { readdirSync, statSync, mkdirSync } = require("fs");
+
+const { ffmpegEncode } = require("./lib/ffmpeg");
+const {
+  isFile,
+  isVideo,
+  getHumanReadableSize,
+  isDirectory,
+} = require("./lib/files");
+const { incoming, videos } = require("./lib/paths");
+const { resolutions } = require("./lib/resolutions");
+const { script, exitOnCancel } = require("./lib/script");
+
+const introText = `
+This script is used to encode video files to mp4 for streaming. Before you run it, please make sure that :
+* You have dropped the files to encode in the ${color.yellow(
+  "/incoming"
+)} volume
+* You have mounted the ${color.yellow(
+  "/data/videos"
+)} volume to where the encoded files will be stored
+`;
+
+script(async function encode() {
+  intro(introText);
+
+  const availableVideos = readdirSync(incoming)
+    .filter(isFile())
+    .filter(isVideo)
+    .map((fileName) => {
+      const fileStats = statSync(path.join(incoming, fileName));
+
+      return {
+        path: path.join(incoming, fileName),
+        bytes: fileStats.size,
+        size: getHumanReadableSize(fileStats.size),
+      };
+    });
+
+  const maxSize = _.maxBy(availableVideos, (video) => video.size.length).size
+    .length;
+
+  const selectedVideos = await multiselect({
+    message: "Select videos to encode.",
+    options: availableVideos.map((video) => ({
+      value: video.path,
+      label: [
+        "📼",
+        video.size.padStart(maxSize, " "),
+        video.path.split("/").pop(),
+      ].join(" | "),
+    })),
+    initialValues: availableVideos.map((video) => video.path),
+  });
+
+  exitOnCancel(selectedVideos);
+
+  const totalSize = _.chain(availableVideos)
+    .filter((video) => selectedVideos.includes(video.path))
+    .sumBy("bytes")
+    .value();
+
+  log.step(
+    `${selectedVideos.length} videos selected. (${getHumanReadableSize(
+      totalSize
+    )})`
+  );
+
+  const remoteFolders = readdirSync(videos)
+    .filter(isDirectory(videos))
+    .map((folderName) => path.join(videos, folderName));
+
+  let outputFolder = await select({
+    message: "Select destination folder.",
+    options: [
+      { value: "new", label: ["✏️", "Create a new folder"].join(" | ") },
+      ...remoteFolders.map((folderName) => ({
+        value: folderName,
+        label: ["📂", folderName.split("/").pop()].join(" | "),
+      })),
+    ],
+  });
+
+  exitOnCancel(outputFolder);
+
+  if (outputFolder === "new") {
+    const folderToCreate = await text({
+      message: "Enter the name of the folder (should be the ID of the channel)",
+    });
+
+    exitOnCancel(folderToCreate);
+
+    mkdirSync(path.join(videos, folderToCreate));
+    outputFolder = path.join(videos, folderToCreate);
+  }
+
+  const resolution = await select({
+    message: "Select resolution.",
+    options: resolutions.map((resolution) => ({
+      value: resolution,
+      label: `${resolution}p`,
+    })),
+  });
+
+  exitOnCancel(resolution);
+
+  let currentVideoIndex = 0;
+
+  for (let videoPath of selectedVideos) {
+    currentVideoIndex++;
+
+    log.step(
+      `${currentVideoIndex}/${selectedVideos.length} - Encoding ${videoPath
+        .split("/")
+        .pop()}`
+    );
+
+    try {
+      await ffmpegEncode(outputFolder, videoPath, resolution);
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  outro(
+    `✅ ${selectedVideos.length} videos have been added to the ${playlistId} playlist`
+  );
+});
