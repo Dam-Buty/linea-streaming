@@ -44,7 +44,7 @@ Here are the basic steps to preparing your content for streaming on Linea :
 - Make sure your cover pictures are in WebP format
 - Make sure your videos are encoded in a [browser-compatible video format](https://developer.mozilla.org/en-US/docs/Web/Media/Guides/Formats/Video_codecs)
 
-You don't have to serve the video and image files themselves from Linea. If you already have your content in the correct formats, hosted online and directly accessible with a URL, then you can skip directly to [the next section](#3-channel-playlists).
+You don't have to serve the video and image files themselves from Linea. If you already have your content in the correct formats, hosted online and directly accessible with a URL, then you can skip directly to [the next section](#4-channel-playlists).
 
 Before using the content preparation scripts, make sure to set the following environment variables in your `docker-compose.yml` :
 

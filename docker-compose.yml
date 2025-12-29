@@ -11,8 +11,8 @@ services:
       - "./data/videos:/src/videos"
       - "./www:/src/www"
     # environment:
-    #   - LINEA_STREAMING_BASE_URL=https://tv.lazone.at
-    #   - LINEA_VIDEOS_BASE_URL=https://lazone.bourlypokertour.fr
+    #   - LINEA_STREAMING_BASE_URL=https://tv.yourdomain
+    #   - LINEA_VIDEOS_BASE_URL=https://ostorage.yourdomain
 
   web:
     image: sebp/lighttpd
@@ -39,12 +39,13 @@ services:
     #   - traefik-network
     # labels:
     #   - "traefik.enable=true"
-    #   - "traefik.http.services.testtv.loadbalancer.server.port=80"
+    #   - "traefik.http.services.tv.loadbalancer.server.port=80"
     #   # Router
-    #   - "traefik.http.routers.testtv.rule=Host(`testtv.lazone.at`)"
-    #   - "traefik.http.routers.testtv.entrypoints=websecure"
-    #   - "traefik.http.routers.testtv.tls=true"
-    #   - "traefik.http.routers.testtv.tls.certresolver=letsencrypt"
-# networks:
-#   traefik-network:
-#     external: true
+    #   - "traefik.http.routers.tv.rule=Host(`tv.yourdomain`)"
+    #   - "traefik.http.routers.tv.entrypoints=websecure"
+    #   - "traefik.http.routers.tv.tls=true"
+    #   - "traefik.http.routers.tv.tls.certresolver=letsencrypt"
+
+networks:
+  traefik-network:
+    external: true

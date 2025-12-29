@@ -1,6 +1,13 @@
 on loadData
   fetch /data.json as json with cache:"no-store" then
     set global channels to result
+    -- Load watch times from localStorage into memory
+    get localStorage.watchTimes
+    if it exists then
+      set global watchTimes to JSON.parse(it)
+    else
+      set global watchTimes to {}
+    end
     template()
     get localStorage.lastChannel
     if it exists
@@ -8,7 +15,42 @@ on loadData
     else
       zap(channels[0].id)
     end
+    updateWatchTimeDisplay()
 
+def formatWatchTime(minutes)
+  set days to Math.floor(minutes / 1440)
+  set hours to Math.floor((minutes mod 1440) / 60)
+  set remainingMinutes to minutes mod 60
+  return `${days}J-${hours}H-${remainingMinutes}M`
+end
+
+def updateWatchTimeDisplay()
+  if global currentChannelId exists then
+    set minutes to 0
+    if watchTimes[currentChannelId] exists then
+      set minutes to watchTimes[currentChannelId]
+    end
+    put formatWatchTime(minutes) into #watch-time-display
+  else
+    put "0J-0H-0M" into #watch-time-display
+  end
+end
+
+def tickWatchTime()
+  if global currentChannelId exists then
+    if watchTimes[currentChannelId] exists then
+      set watchTimes[currentChannelId] to watchTimes[currentChannelId] + 1
+    else
+      set watchTimes[currentChannelId] to 1
+    end
+    saveWatchTimes()
+    updateWatchTimeDisplay()
+  end
+end
+
+def saveWatchTimes()
+  set localStorage.watchTimes to JSON.stringify(watchTimes)
+end
 
 def computePlaylistOffset(channel)
   set now to Math.round(Date.now() / 1000)
@@ -30,6 +72,23 @@ def zap(id)
     go to url ${channel.link} in new window
   else
     set global currentChannelId to id
+    
+    -- Reset opacity on all channel cards
+    for channelCard in #card-container.querySelectorAll('.channel')
+      remove .line-clamp-none from channelCard.querySelector('.channel-subtitle')
+      remove .opacity-90 from channelCard
+      add .opacity-70 to channelCard
+    end
+    
+    -- Set currently playing channel to opacity-90
+    set currentCard to #card-container.querySelector(`.channel[data-channel-id="${id}"]`)
+
+    if currentCard exists then
+      remove .opacity-70 from currentCard
+      add .opacity-90 to currentCard
+      add .line-clamp-none to currentCard.querySelector('.channel-subtitle')
+    end
+    
     set videoCursor to 0
     set videoOffset to computePlaylistOffset(channel)
 
@@ -40,8 +99,194 @@ def zap(id)
 
     set #tv-frame.src to channel.videos[videoCursor].url
     set #tv-frame.currentTime to videoOffset
-    put `↜ ${channel.videos[videoCursor].title} ↝` into .currently-playing
+    set #tv-frame-mobile.src to channel.videos[videoCursor].url
+    set #tv-frame-mobile.currentTime to videoOffset
+    put channel.videos[videoCursor].title into .currently-playing
+    updateWatchTimeDisplay()
   end
+end
+
+def calculatePieChartData()
+  set chartData to []
+  
+  -- Collect watch times for all channels
+  for channel in channels
+    if channel.link does not exist then
+      set minutes to 0
+      if watchTimes[channel.id] exists then
+        set minutes to watchTimes[channel.id]
+      end
+      if minutes > 0 then
+        set emoji to Array.from(channel.title)[0] or "?"
+        call chartData.push({id: channel.id, title: channel.title, minutes: minutes, emoji: emoji})
+      end
+    end
+  end
+  
+  -- Simple bubble sort by minutes descending
+  set n to chartData.length
+  repeat (n - 1) times index i
+    repeat ((n - i) - 1) times index j
+      if chartData[j].minutes < chartData[j + 1].minutes then
+        set temp to chartData[j]
+        set chartData[j] to chartData[j + 1]
+        set chartData[j + 1] to temp
+      end
+    end
+  end
+  
+  -- Group minor channels into "Other" (bottom 50% by count, but only if there are more than 5 channels)
+  if chartData.length > 5 then
+    set thresholdIndex to Math.floor(chartData.length / 2)
+    set majorChannels to []
+    set otherMinutes to 0
+    
+    repeat chartData.length times index i
+      if i < thresholdIndex then
+        call majorChannels.push(chartData[i])
+      else
+        set otherMinutes to otherMinutes + chartData[i].minutes
+      end
+    end
+    
+    if otherMinutes > 0 then
+      call majorChannels.push({id: "other", title: "Autres", minutes: otherMinutes, emoji: "📊"})
+    end
+    
+    return majorChannels
+  else
+    return chartData
+  end
+end
+
+def drawPieChart()
+  set data to calculatePieChartData()
+  set canvas to #pie-chart
+  set ctx to canvas.getContext("2d")
+  
+  -- Destroy existing chart if any
+  if global pieChartInstance exists then
+    call pieChartInstance.destroy()
+  end
+  
+  if data.length is 0 then
+    exit
+  end
+  
+  -- Prepare data for Chart.js
+  set values to []
+  set colors to ["#FF6B6B", "#4ECDC4", "#FFE66D", "#95E1D3", "#F38181", "#AA96DA", "#FCBAD3", "#A8D8EA", "#FF9F43", "#6C5CE7", "#00B894", "#FD79A8", "#74B9FF", "#FFEAA7", "#DFE6E9"]
+  set bgColors to []
+  set titles to []
+  set emojis to []
+  
+  set i to 0
+  for item in data
+    call values.push(item.minutes)
+    set colorIndex to i mod colors.length
+    call bgColors.push(colors[colorIndex])
+    call titles.push(formatWatchTime(item.minutes) + " sur " + item.title)
+    call emojis.push(item.emoji)
+    set i to i + 1
+  end
+  
+  -- Calculate total for percentage check
+  set total to 0
+  for v in values
+    set total to total + v
+  end
+  
+  -- Store data globally for datalabels formatter
+  set window.chartEmojis to emojis
+  set window.chartTotal to total
+  
+  -- Create chart config
+  set chartData to {
+    labels: titles,
+    datasets: [{
+      label: "Minutes",
+      data: values,
+      backgroundColor: bgColors,
+      borderColor: "#110B16",
+      borderWidth: 2,
+      hoverOffset: 8
+    }]
+  }
+  
+  set chartConfig to {
+    type: "pie",
+    data: chartData,
+    plugins: [ChartDataLabels],
+    options: {
+      responsive: false,
+      plugins: {
+        legend: {
+          display: false
+        },
+        datalabels: {
+          formatter: window.emojiFormatter,
+          font: {
+            size: 24
+          },
+          color: "#110B16"
+        }
+      }
+    }
+  }
+
+  make a Chart from ctx, chartConfig then set global pieChartInstance to it
+end
+
+def calculateTagStats()
+  set total to 0
+  set frMinutes to 0
+  set enMinutes to 0
+  set filmsMinutes to 0
+  set seriesMinutes to 0
+  set showsMinutes to 0
+  
+  for channel in channels
+    if channel.link does not exist then
+      set mins to 0
+      if watchTimes[channel.id] exists then
+        set mins to watchTimes[channel.id]
+      end
+      if mins > 0 then
+        set total to total + mins
+        if channel.tags exists then
+          if channel.tags.includes("fr") then
+            set frMinutes to frMinutes + mins
+          end
+          if channel.tags.includes("en") then
+            set enMinutes to enMinutes + mins
+          end
+          if channel.tags.includes("films") then
+            set filmsMinutes to filmsMinutes + mins
+          end
+          if channel.tags.includes("series") then
+            set seriesMinutes to seriesMinutes + mins
+          end
+          if channel.tags.includes("shows") then
+            set showsMinutes to showsMinutes + mins
+          end
+        end
+      end
+    end
+  end
+  
+  if total > 0 then
+    put Math.round((frMinutes / total) * 100) + "%" into #stat-fr
+    put Math.round((enMinutes / total) * 100) + "%" into #stat-en
+    put Math.round((filmsMinutes / total) * 100) + "%" into #stat-films
+    put Math.round((seriesMinutes / total) * 100) + "%" into #stat-series
+    put Math.round((showsMinutes / total) * 100) + "%" into #stat-shows
+  end
+end
+
+def showWatchTimeModal()
+  drawPieChart()
+  calculateTagStats()
+  remove .hidden from #watch-time-modal
 end
 
 def template()
@@ -51,37 +296,39 @@ def template()
     else
       set tagClasses to ""
     end
-    if channel.link exists
-      put `
-
-        <a href="${channel.link}" target="_blank" class="block ${tagClasses} channel">
-          <div 
-            class=
-              "cursor-alias p-2 rounded-lg opacity-70 hover:opacity-90 bg-[url('${channel.image}')] bg-contain"
-            title="${channel.description}"
-          >
-            <div class="w-4/5 h-full ml-[20%] text-2xl font-bold text-dark bg-light text-right p-2 rounded-lg">
-              ${channel.title}
-
-              <aside class="text-right text-xs mb-2 bg-dark text-light opacity-70 rounded-sm">
-                Pas hébergé sur Télé Zone Libre ⇾
-              </aside>
-            </div>
-          </div>
-        </a>
-      `
-      at the end of #card-container
+    
+    if channel.link exists then
+      set templateEl to #channel-link-template.content.cloneNode(true)
+      set newChannel to templateEl.querySelector('a')
+      set newChannel.href to channel.link
+      if tagClasses is not "" then
+        for tagClass in tagClasses.split(' ')
+          call newChannel.classList.add(tagClass)
+        end
+      end
+      set newChannel.title to channel.description
+      put channel.title into newChannel.querySelector('.channel-title')
+      put channel.description into newChannel.querySelector('.channel-subtitle')
+      set imgEl to newChannel.querySelector('.channel-image')
+      set imgEl.src to channel.image
+      set imgEl.alt to channel.title
+      put templateEl at the end of #card-container
     else
-      put `
-      <div 
-        class=
-          "cursor-pointer p-2 rounded-lg opacity-70 hover:opacity-90 bg-[url('${channel.image}')] bg-contain channel ${tagClasses}"
-        title="${channel.description}" _="on click zap('${channel.id}')"
-      >
-        <div class="h-4/5 lg:h-full w-full lg:w-4/5 mt-[50%] lg:mt-0 lg:ml-[20%] text-xl lg:text-2xl font-bold text-dark bg-light text-right p-2 rounded-lg">${channel.title}</div>
-      </div>
-      `
-      at the end of #card-container
+      set templateEl to #channel-template.content.cloneNode(true)
+      set newChannel to templateEl.querySelector('div')
+      set newChannel.dataset.channelId to channel.id
+      if tagClasses is not "" then
+        for tagClass in tagClasses.split(' ')
+          call newChannel.classList.add(tagClass)
+        end
+      end
+      set newChannel.title to channel.description
+      put channel.title into newChannel.querySelector('.channel-title')
+      put channel.description into newChannel.querySelector('.channel-subtitle')
+      set imgEl to newChannel.querySelector('.channel-image')
+      set imgEl.src to channel.image
+      set imgEl.alt to channel.title
+      put templateEl at the end of #card-container
     end
   end
 end

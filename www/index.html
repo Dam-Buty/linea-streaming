@@ -17,14 +17,56 @@
       content="La télé des années 90 dans ton ordi des années 20"
     />
     <title>Bienvenue sur Télé Zone Libre</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=VT323&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Iceland&display=swap"
+      rel="stylesheet"
+    />
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
       body {
-        scrollbar-color: #f0edd5 #110b16;
+        scrollbar-color: #c4c0a8 #2a2a2a;
       }
 
       #tv-container {
         background-size: 100% 100%;
+      }
+
+      .vt323-regular {
+        font-family: "VT323", monospace;
+        font-weight: 400;
+        font-style: normal;
+      }
+
+      .iceland-regular {
+        font-family: "Iceland", sans-serif;
+        font-weight: 400;
+        font-style: normal;
+      }
+
+      .segment-display-bg {
+        background: linear-gradient(
+          135deg,
+          rgba(44, 24, 16, 0.95) 0%,
+          rgba(44, 24, 16, 0.85) 100%
+        );
+        border: 2px solid rgba(232, 132, 74, 0.2);
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5),
+          inset 0 1px 0 rgba(232, 132, 74, 0.1),
+          inset 0 -1px 0 rgba(0, 0, 0, 0.3), 0 0 30px rgba(232, 132, 74, 0.1);
+        backdrop-filter: blur(4px);
+        transform: perspective(1000px) rotateX(2deg);
+      }
+
+      .segment-display-text {
+        text-shadow: 0 0 10px rgba(232, 132, 74, 0.8),
+          0 0 20px rgba(232, 132, 74, 0.5);
       }
     </style>
     <script>
@@ -32,10 +74,12 @@
         theme: {
           extend: {
             colors: {
-              dark: "#110B16",
+              dark: "#2A2A2A",
               light: "#F0EDD5",
-              sand: "#F1E9AE",
-              eggplant: "#533869",
+              sand: "#E8E4D0",
+              eggplant: "#6B4423",
+              wood: "#2C1810",
+              orange: "#E8844A",
             },
             backgroundImage: {
               "tv-pattern": "url('images/tele-zone-libre.webp')",
@@ -47,13 +91,34 @@
 
     <script type="text/hyperscript" src="index._hs"></script>
     <script src="https://unpkg.com/hyperscript.org@0.9.9"></script>
-    <script src="https://unpkg.com/hyperscript.org@0.9.9/dist/socket.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
+    <script>
+      window.emojiFormatter = function (value, ctx) {
+        const percent = (value / window.chartTotal) * 100;
+        if (percent < 5) {
+          return "";
+        }
+        return window.chartEmojis[ctx.dataIndex];
+      };
+    </script>
   </head>
-  <body class="bg-dark text-light justify-center items-center h-screen">
+  <body
+    class="bg-dark text-light justify-center items-center h-screen"
+    _="
+      on load
+        repeat forever
+          tickWatchTime()
+          wait 60s
+      end
+      on beforeunload saveWatchTimes()
+    "
+  >
     <div class="flex flex-col lg:flex-row w-full h-full">
+      <label for="tag-select" class="sr-only">Filtrer les chaînes</label>
       <select
         id="tag-select"
-        class="bg-light text-dark w-1/5 h-10 rounded-lg p-3 lg:fixed lg:block top-0 left-0 hidden"
+        class="bg-light text-dark w-1/5 h-10 px-3 py-2 lg:fixed lg:block top-0 left-0 hidden"
         autocomplete="off"
         _="
         on change
@@ -78,24 +143,29 @@
           <option value="anime">Animation 🎨</option>
         </optgroup>
       </select>
-      <div
+      <nav
         id="cards-layout"
         class="lg:mt-10 lg:mb-0 mb-1 lg:w-1/5 overflow-x-auto lg:overflow-y-auto"
         _="init send loadData"
       >
-        <div id="card-container" class="flex flex-row lg:flex-col"></div>
-      </div>
+        <div
+          id="card-container"
+          class="flex flex-row lg:flex-col"
+          _="on click 
+            if event.target.closest('.channel[data-channel-id]') then
+              set clickedChannel to event.target.closest('.channel[data-channel-id]')
+              zap(clickedChannel.dataset.channelId)
+            end
+          "
+        ></div>
+      </nav>
 
-      <h1
-        class="currently-playing lg:hidden bg-dark text-light opacity-70 text-center text-xl lg:text-4xl font-bold mb-2 rounded-lg"
-      ></h1>
-
-      <div
+      <main
         id="tv-container"
-        class="w-full lg:w-4/5 relative h-full lg:bg-tv-pattern bg-contain"
+        class="w-full lg:w-4/5 relative h-full flex items-center justify-center"
       >
         <div
-          class="hidden lg:block absolute top-0 left-0 w-[80px] h-full bg-dark bg-opacity-0 hover-bg-opacity-70 cursor-w-resize"
+          class="hidden lg:block absolute top-0 left-0 w-[80px] h-full bg-dark bg-opacity-0 hover-bg-opacity-70 cursor-w-resize z-10"
           _="on click 
               if #cards-layout's *width is '0px' then
                 transition #cards-layout width to 20%
@@ -110,22 +180,325 @@
               end
           "
         ></div>
-        <video
-          class="absolute top-0 left-0 w-full lg:top-[10%] lg:left-[8%] lg:w-[62%] lg:h-[76%] object-contain bg-black rounded-lg"
-          id="tv-frame"
-          src="images/static.mp4"
-          controls
-          autoplay
-          muted
-          _="on startAt(startTime) 
-            set my currentTime to startTime
-            on ended
-              zap(currentChannelId)
-          "
-        ></video>
-        <h1
-          class="currently-playing absolute hidden lg:block w-3/4 overflow-hidden text-nowrap bottom-2 left-1/5 bg-dark text-light opacity-70 text-center text-4xl font-bold mb-2 rounded-lg"
-        ></h1>
+
+        <section
+          class="relative w-full h-full flex items-center justify-center lg:block hidden"
+        >
+          <summary
+            class="vt323-regular currently-playing text-orange absolute hidden lg:block top-0 left-0 right-[20%] px-[4rem] opacity-90 text-center text-4xl font-bold rounded-lg z-20 pointer-events-none truncate max-w-full leading-[1.2]"
+          ></summary>
+          <article
+            class="absolute inset-0 bg-eggplant p-8 border-[3rem] border-[#2C1810] right-[20%]"
+            style="border-style: solid double"
+          >
+            <video
+              class="w-full h-full object-contain bg-black"
+              id="tv-frame"
+              src="images/static.mp4"
+              controls
+              autoplay
+              muted
+              _="on startAt(startTime) 
+                set my currentTime to startTime
+                on ended
+                  zap(currentChannelId)
+              "
+            ></video>
+          </article>
+
+          <!-- Right Border with Speaker -->
+          <svg
+            class="absolute right-0 top-0 h-full"
+            viewBox="0 0 200 1000"
+            preserveAspectRatio="none"
+            style="width: 20%"
+          >
+            <!-- Background -->
+            <rect x="0" y="0" width="200" height="1000" fill="#6B4423" />
+
+            <!-- Speaker Grille (bottom) -->
+            <rect
+              x="25"
+              y="550"
+              width="150"
+              height="300"
+              rx="15"
+              fill="#2C1810"
+            />
+            <!-- Horizontal slots -->
+            <rect
+              x="40"
+              y="580"
+              width="120"
+              height="12"
+              rx="6"
+              fill="#6B4423"
+            />
+            <rect
+              x="40"
+              y="615"
+              width="120"
+              height="12"
+              rx="6"
+              fill="#6B4423"
+            />
+            <rect
+              x="40"
+              y="620"
+              width="120"
+              height="12"
+              rx="6"
+              fill="#6B4423"
+            />
+            <rect
+              x="40"
+              y="655"
+              width="120"
+              height="12"
+              rx="6"
+              fill="#6B4423"
+            />
+            <rect
+              x="40"
+              y="690"
+              width="120"
+              height="12"
+              rx="6"
+              fill="#6B4423"
+            />
+            <rect
+              x="40"
+              y="725"
+              width="120"
+              height="12"
+              rx="6"
+              fill="#6B4423"
+            />
+            <rect
+              x="40"
+              y="760"
+              width="120"
+              height="12"
+              rx="6"
+              fill="#6B4423"
+            />
+            <rect
+              x="40"
+              y="795"
+              width="120"
+              height="12"
+              rx="6"
+              fill="#6B4423"
+            />
+          </svg>
+
+          <!-- Channel Knob (top) - Separate SVG for proper aspect ratio -->
+          <svg
+            class="absolute z-10"
+            style="right: 5%; top: 8%; width: 10%; aspect-ratio: 1"
+            viewBox="-60 -60 120 120"
+          >
+            <!-- Outer skirt ring -->
+            <circle cx="0" cy="0" r="55" fill="#0a0a0a" />
+            <circle cx="0" cy="0" r="52" fill="#1a1a1a" />
+            <!-- Inner raised knob body -->
+            <circle cx="0" cy="0" r="48" fill="#151515" />
+            <!-- Hexagonal faceted top surface -->
+            <polygon
+              points="0,-44 38,-22 38,22 0,44 -38,22 -38,-22"
+              fill="#1a1a1a"
+            />
+            <!-- Indicator line - centered on facet at -30° -->
+            <g transform="rotate(-30)">
+              <rect
+                x="-4"
+                y="-42"
+                width="8"
+                height="24"
+                rx="1"
+                fill="#E8844A"
+              />
+            </g>
+          </svg>
+
+          <!-- Volume Knob (middle) - Separate SVG for proper aspect ratio -->
+          <svg
+            class="absolute z-10"
+            style="right: 5%; top: 32%; width: 10%; aspect-ratio: 1"
+            viewBox="-60 -60 120 120"
+          >
+            <!-- Outer skirt ring -->
+            <circle cx="0" cy="0" r="55" fill="#0a0a0a" />
+            <circle cx="0" cy="0" r="52" fill="#1a1a1a" />
+            <!-- Inner raised knob body -->
+            <circle cx="0" cy="0" r="48" fill="#151515" />
+            <!-- Hexagonal faceted top surface -->
+            <polygon
+              points="0,-44 38,-22 38,22 0,44 -38,22 -38,-22"
+              fill="#1a1a1a"
+            />
+            <!-- Indicator line - centered on facet at 30° -->
+            <g transform="rotate(30)">
+              <rect
+                x="-4"
+                y="-42"
+                width="8"
+                height="24"
+                rx="1"
+                fill="#E8844A"
+              />
+            </g>
+          </svg>
+
+          <!-- Segment Display for Watch Time -->
+          <div
+            class="segment-display-bg absolute right-[1%] bottom-[3%] w-[18%] z-30 cursor-pointer"
+            _="on click showWatchTimeModal()"
+          >
+            <div
+              id="watch-time-display"
+              class="segment-display-text iceland-regular text-light text-2xl font-bold py-3 text-center"
+            >
+              0J-0H-0M
+            </div>
+          </div>
+
+          <!-- Mobile video (full screen, no TV frame) -->
+          <article class="lg:hidden relative w-full h-full">
+            <video
+              class="absolute top-0 left-0 w-full h-full object-contain bg-black"
+              id="tv-frame-mobile"
+              src="images/static.mp4"
+              controls
+              autoplay
+              muted
+              _="on startAt(startTime) 
+              set my currentTime to startTime
+              on ended
+                zap(currentChannelId)
+            "
+            ></video>
+            <h1
+              class="currently-playing absolute bottom-4 left-1/2 -translate-x-1/2 bg-dark text-light opacity-80 text-center text-xl font-bold px-4 py-2 rounded-lg z-20 pointer-events-none truncate max-w-full leading-[1.2]"
+            ></h1>
+          </article>
+        </section>
+      </main>
+    </div>
+
+    <!-- Templates -->
+    <template id="channel-template">
+      <div
+        class="cursor-pointer opacity-70 hover:opacity-90 channel group"
+        data-channel-id=""
+        title=""
+      >
+        <div
+          class="flex items-center gap-3 p-2 bg-light border-b border-dark border-opacity-20"
+        >
+          <div class="flex-1 min-w-0">
+            <h3
+              class="channel-title text-lg font-sans font-normal text-dark mb-1"
+            ></h3>
+            <p
+              class="channel-subtitle text-sm font-sans italic text-dark opacity-80 line-clamp-2 group-hover:line-clamp-none"
+            ></p>
+          </div>
+          <img
+            src=""
+            alt=""
+            class="channel-image w-16 h-16 object-cover flex-shrink-0"
+          />
+        </div>
+      </div>
+    </template>
+
+    <template id="channel-link-template">
+      <a
+        href=""
+        target="_blank"
+        class="block channel cursor-alias opacity-70 hover:opacity-90 group"
+      >
+        <div
+          class="flex items-center gap-3 p-2 bg-light border-b border-dark border-opacity-20"
+        >
+          <div class="flex-1 min-w-0">
+            <h3
+              class="channel-title text-lg font-sans font-normal text-dark mb-1"
+            ></h3>
+            <p
+              class="channel-subtitle text-sm font-sans italic text-dark opacity-80 line-clamp-2 group-hover:line-clamp-none"
+            ></p>
+            <span class="text-xs text-dark opacity-50 mt-1 inline-block"
+              >Pas hébergé sur Télé Zone Libre ⇾</span
+            >
+          </div>
+          <img
+            src=""
+            alt=""
+            class="channel-image w-16 h-16 object-cover flex-shrink-0"
+          />
+        </div>
+      </a>
+    </template>
+
+    <!-- Watch Time Modal -->
+    <div
+      id="watch-time-modal"
+      class="hidden fixed inset-0 bg-dark bg-opacity-90 z-50 flex items-center justify-center"
+      _="on click if event.target is me then add .hidden to me end"
+    >
+      <div
+        class="bg-eggplant rounded-lg p-8 pb-4 max-w-2xl w-full mx-4 relative"
+        _="on click halt"
+      >
+        <button
+          class="absolute top-4 right-4 text-light hover:text-sand text-2xl font-bold"
+          _="on click add .hidden to #watch-time-modal"
+        >
+          ×
+        </button>
+        <h2 class="vt323-regular text-light text-3xl mb-6 text-center">
+          Temps de visionnage
+        </h2>
+        <div id="pie-chart-container" class="flex justify-center mb-6">
+          <canvas id="pie-chart" width="400" height="400"></canvas>
+        </div>
+        <table id="stats-table" class="text-light w-full text-lg">
+          <tr>
+            <td class="py-2">🇫🇷 Français</td>
+            <td id="stat-fr" class="py-2 text-right">0%</td>
+            <td class="py-2 px-4">🇬🇧 Anglais</td>
+            <td id="stat-en" class="py-2 text-right">0%</td>
+          </tr>
+          <tr>
+            <td class="py-2">🎬 Films</td>
+            <td id="stat-films" class="py-2 text-right">0%</td>
+            <td class="py-2 px-4">📀 Séries</td>
+            <td id="stat-series" class="py-2 text-right">0%</td>
+            <td class="py-2 px-4">📺 Emissions</td>
+            <td id="stat-shows" class="py-2 text-right">0%</td>
+          </tr>
+        </table>
+        <p class="text-light text-sm mt-2 text-center opacity-70">
+         <ul class="list-none text-light text-medium mt-6 text-center opacity-70">
+          <li>
+            Anti-(c)opyright Zone Libre 2025 - All rites reversed
+          </li>
+          <li>
+            Fait avec
+            <a href="https://hyperscript.org" target="_blank" class="underline hover:opacity-90">hyperscript</a>
+            parceque ça avait l'air rigolo <3
+          </li>
+         </ul>
+        </p>
+        <p class="text-light text-sm mt-3 text-center opacity-70">
+          Les statistiques sont uniquement stockées dans votre navigateur. TV
+          Zone Libre ne s'intéresse pas à vos données et n'utilise pas de
+          service de tracking ou d'analytics. Je vais vous dire, je vois même
+          pas vos IP parcequ'elles sont pas forwardées au container Lighttpd.
+        </p>
+        <p class="text-light text-4xl mt-2 text-center opacity-70">🤷</p>
       </div>
     </div>
   </body>
