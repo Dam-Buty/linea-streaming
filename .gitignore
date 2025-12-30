@@ -1,3 +1,5 @@
 *.m3u8
 node_modules
 www/data.json
+docker-compose.yml
+local

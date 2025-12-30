@@ -10,14 +10,12 @@ services:
       - "./incoming:/src/incoming"
       - "./data/videos:/src/videos"
       - "./www:/src/www"
-    # environment:
-    #   - LINEA_STREAMING_BASE_URL=https://tv.yourdomain
-    #   - LINEA_VIDEOS_BASE_URL=https://ostorage.yourdomain
+    environment:
+      - LINEA_STREAMING_BASE_URL=https://vo.lazone.at
+      # - LINEA_VIDEOS_BASE_URL=https://ostorage.yourdomain
 
   web:
     image: sebp/lighttpd
-    ports:
-      - "8066:80"
     depends_on:
       processor:
         condition: service_completed_successfully
@@ -35,16 +33,16 @@ services:
       - "./data/videos:/var/www/localhost/htdocs/videos"
     restart: no
 
-    # networks:
-    #   - traefik-network
-    # labels:
-    #   - "traefik.enable=true"
-    #   - "traefik.http.services.tv.loadbalancer.server.port=80"
-    #   # Router
-    #   - "traefik.http.routers.tv.rule=Host(`tv.yourdomain`)"
-    #   - "traefik.http.routers.tv.entrypoints=websecure"
-    #   - "traefik.http.routers.tv.tls=true"
-    #   - "traefik.http.routers.tv.tls.certresolver=letsencrypt"
+    networks:
+      - traefik-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.vo.loadbalancer.server.port=80"
+      # Router
+      - "traefik.http.routers.vo.rule=Host(`vo.lazone.at`)"
+      - "traefik.http.routers.vo.entrypoints=websecure"
+      - "traefik.http.routers.vo.tls=true"
+      - "traefik.http.routers.vo.tls.certresolver=letsencrypt"
 
 networks:
   traefik-network:
