@@ -11,8 +11,17 @@ services:
       - "./data/videos:/src/videos"
       - "./www:/src/www"
     environment:
-      - LINEA_STREAMING_BASE_URL=https://vo.lazone.at
-      # - LINEA_VIDEOS_BASE_URL=https://ostorage.yourdomain
+      - LINEA_STREAMING_BASE_URL=https://subdomain.domain.tld
+      # - LINEA_VIDEOS_BASE_URL=https://storage.domain.tld/videos
+      # Platform customization
+      - PLATFORM_TITLE=Your platform title
+      - PLATFORM_DESCRIPTION=Your platform description
+      - PLATFORM_OG_TITLE=Your platform OG title # (will appear in Facebook, Twitter, etc.)
+      - PLATFORM_OG_DESCRIPTION=Your platform OG description # (will appear in Facebook, Twitter, etc.)
+      - PLATFORM_OG_IMAGE=https://your.domain.tld/images/fb-logo.webp # (will appear in Facebook, Twitter, etc.)
+      - PLATFORM_EXTERNAL_LINK_TEXT=Not Hosted here ⇾ # (will appear in the links to external channels )
+      - PLATFORM_PRIVACY_NOTICE=No data is or will ever be stored or processed. We don't care about your stuff. # (will appear in the footer)
+      - PLATFORM_SHRUG_EMOJI=🤷 # (emoji displayed at the end of the privacy notice)
 
   web:
     image: sebp/lighttpd
@@ -33,16 +42,17 @@ services:
       - "./data/videos:/var/www/localhost/htdocs/videos"
     restart: no
 
-    networks:
-      - traefik-network
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.services.vo.loadbalancer.server.port=80"
-      # Router
-      - "traefik.http.routers.vo.rule=Host(`vo.lazone.at`)"
-      - "traefik.http.routers.vo.entrypoints=websecure"
-      - "traefik.http.routers.vo.tls=true"
-      - "traefik.http.routers.vo.tls.certresolver=letsencrypt"
+    # Uncomment this section if you use Traefik for SSL termination and routing
+    # networks:
+    #   - traefik-network
+    # labels:
+    #   - "traefik.enable=true"
+    #   - "traefik.http.services.subdomain.loadbalancer.server.port=80"
+    #   # Router
+    #   - "traefik.http.routers.subdomain.rule=Host(`subdomain.domain.tld`)"
+    #   - "traefik.http.routers.subdomain.entrypoints=websecure"
+    #   - "traefik.http.routers.subdomain.tls=true"
+    #   - "traefik.http.routers.subdomain.tls.certresolver=letsencrypt"
 
 networks:
   traefik-network:

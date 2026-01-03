@@ -1,6 +1,18 @@
 on loadData
   fetch /data.json as json with cache:"no-store" then
-    set global channels to result
+    set global platformConfig to {
+      platformTitle: result.platformTitle,
+      platformDescription: result.platformDescription,
+      platformOgTitle: result.platformOgTitle,
+      platformOgDescription: result.platformOgDescription,
+      platformOgImage: result.platformOgImage,
+      platformExternalLinkText: result.platformExternalLinkText,
+      platformPrivacyNotice: result.platformPrivacyNotice,
+      platformShrugEmoji: result.platformShrugEmoji
+    }
+    set global channels to result.channels
+    -- Update HTML with platform configuration
+    call updatePlatformContent()
     -- Load watch times from localStorage into memory
     get localStorage.watchTimes
     if it exists then
@@ -289,6 +301,41 @@ def showWatchTimeModal()
   remove .hidden from #watch-time-modal
 end
 
+def updatePlatformContent()
+  if global platformConfig exists then
+    -- Update title
+    set document.title to platformConfig.platformTitle
+    -- Update meta description
+    set metaDesc to document.querySelector('meta[name="description"]')
+    if metaDesc exists then
+      set metaDesc.content to platformConfig.platformDescription
+    end
+    -- Update OG tags
+    set ogTitle to document.querySelector('meta[property="og:title"]')
+    if ogTitle exists then
+      set ogTitle.content to platformConfig.platformOgTitle
+    end
+    set ogDesc to document.querySelector('meta[property="og:description"]')
+    if ogDesc exists then
+      set ogDesc.content to platformConfig.platformOgDescription
+    end
+    set ogImage to document.querySelector('meta[property="og:image"]')
+    if ogImage exists then
+      set ogImage.content to platformConfig.platformOgImage
+    end
+    -- Update privacy notice
+    set privacyNotice to document.querySelector('#privacy-notice')
+    if privacyNotice exists then
+      put platformConfig.platformPrivacyNotice into privacyNotice
+    end
+    -- Update shrug emoji
+    set shrugEmoji to document.querySelector('#shrug-emoji')
+    if shrugEmoji exists then
+      put platformConfig.platformShrugEmoji into shrugEmoji
+    end
+  end
+end
+
 def template()
   for channel in channels
     if channel.tags exists then
@@ -312,6 +359,10 @@ def template()
       set imgEl to newChannel.querySelector('.channel-image')
       set imgEl.src to channel.image
       set imgEl.alt to channel.title
+      -- Update external link text with platform config
+      if global platformConfig exists then
+        put platformConfig.platformExternalLinkText into newChannel.querySelector('.external-link-text')
+      end
       put templateEl at the end of #card-container
     else
       set templateEl to #channel-template.content.cloneNode(true)

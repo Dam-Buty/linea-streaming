@@ -51,6 +51,35 @@ Before using the content preparation scripts, make sure to set the following env
 - LINEA_STREAMING_BASE_URL : this is the base URL of your Linea instance (leave empty if you use localhost)
 - LINEA_VIDEOS_BASE_URL : use this if your videos are hosted on a separate domain name
 
+#### Platform Customization
+
+Linea allows you to customize the platform's branding and text content through environment variables. These settings are compiled into `data.json` when the bootstrap script runs. You can customize the following:
+
+- **PLATFORM_TITLE** : The main title displayed in the browser tab and used as the default OG title
+- **PLATFORM_DESCRIPTION** : The meta description for search engines
+- **PLATFORM_OG_TITLE** : Open Graph title (for social media sharing). Defaults to PLATFORM_TITLE if not set
+- **PLATFORM_OG_DESCRIPTION** : Open Graph description (for social media sharing)
+- **PLATFORM_OG_IMAGE** : Open Graph image URL (for social media sharing)
+- **PLATFORM_EXTERNAL_LINK_TEXT** : Text displayed for channels that link to external URLs (default: "Not hosted here ⇾")
+- **PLATFORM_PRIVACY_NOTICE** : Privacy notice text displayed in the watch time modal footer
+- **PLATFORM_SHRUG_EMOJI** : Emoji displayed at the end of the privacy notice (default: "🤷")
+
+Example configuration in `docker-compose.yml`:
+
+```yaml
+environment:
+  - PLATFORM_TITLE=My Streaming Platform
+  - PLATFORM_DESCRIPTION=Welcome to my streaming platform
+  - PLATFORM_OG_TITLE=My Streaming Platform
+  - PLATFORM_OG_DESCRIPTION=Watch amazing content on my platform
+  - PLATFORM_OG_IMAGE=https://example.com/images/og-image.webp
+  - PLATFORM_EXTERNAL_LINK_TEXT=External content ⇾
+  - PLATFORM_PRIVACY_NOTICE=Your privacy is important to us. No data is collected.
+  - PLATFORM_SHRUG_EMOJI=🤷
+```
+
+All platform customization values are optional and will use generic defaults if not provided. See `docker-compose.yml.example` for a complete example.
+
 #### Cover pictures
 
 Linea requires cover images to be in WebP format for optimal performance. If you have images in other formats (JPG, PNG, GIF, BMP, TIFF), you can use the included conversion script to transcode them in batch :

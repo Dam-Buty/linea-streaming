@@ -29,6 +29,31 @@ script(async function bootstrap() {
       s.stop("Deleted existing data.json");
     }
 
+    // Read platform configuration from environment variables
+    s.start("Reading platform configuration...");
+    const platformConfig = {
+      platformTitle: process.env.PLATFORM_TITLE || "Streaming Platform",
+      platformDescription:
+        process.env.PLATFORM_DESCRIPTION || "Streaming platform",
+      platformOgTitle:
+        process.env.PLATFORM_OG_TITLE ||
+        process.env.PLATFORM_TITLE ||
+        "Streaming Platform",
+      platformOgDescription:
+        process.env.PLATFORM_OG_DESCRIPTION ||
+        "Your streaming platform description",
+      platformOgImage:
+        process.env.PLATFORM_OG_IMAGE ||
+        "https://example.com/images/og-image.webp",
+      platformExternalLinkText:
+        process.env.PLATFORM_EXTERNAL_LINK_TEXT || "Not hosted here ⇾",
+      platformPrivacyNotice:
+        process.env.PLATFORM_PRIVACY_NOTICE ||
+        "Statistics are stored only in your browser. No data is collected, stored, or processed on the server. No tracking or analytics services are used.",
+      platformShrugEmoji: process.env.PLATFORM_SHRUG_EMOJI || "🤷",
+    };
+    s.stop("Platform configuration loaded");
+
     // Read all JSON files from channels directory
     s.start("Reading channel files...");
     const channels = [];
@@ -53,9 +78,13 @@ script(async function bootstrap() {
 
     s.stop(`Read ${color.green(channels.length)} channel(s)`);
 
-    // Write compiled data to data.json
+    // Write compiled data to data.json with platform config + channels
     s.start("Writing compiled data...");
-    fs.writeFileSync(DATA_JSON_PATH, JSON.stringify(channels, null, 2), {
+    const data = {
+      ...platformConfig,
+      channels,
+    };
+    fs.writeFileSync(DATA_JSON_PATH, JSON.stringify(data, null, 2), {
       mode: 0o644,
     });
     s.stop("Compiled data written to data.json");
