@@ -20,53 +20,156 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=VT323&display=swap"
-      rel="stylesheet"
-    />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Iceland&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&family=Stick&family=Major+Mono+Display&display=swap"
       rel="stylesheet"
     />
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
+      /* ── SHINGATA—90 · 90s japanese tech · light-mode cyberpunk ──
+         refs: AKIRA · GHOST IN THE SHELL · FAMICOM
+         substrate cream / ink sumi / famicom primaries / no rounded corners */
+      :root {
+        --cream: #e8dec9;
+        --paper: #f1ebda;
+        --ink: #2a2520;
+        --red: #d63828;
+        --amber: #e6b533;
+        --green: #1f8849;
+        --blue: #2d5ba0;
+      }
+
+      /* global type scale — everything in rem grows from here (+30%) */
+      html {
+        font-size: 130%;
+      }
+      html,
       body {
-        scrollbar-color: #c4c0a8 #2a2a2a;
+        scrollbar-color: var(--ink) var(--cream);
+      }
+      ::-webkit-scrollbar {
+        width: 9px;
+        height: 9px;
+      }
+      ::-webkit-scrollbar-track {
+        background: var(--cream);
+      }
+      ::-webkit-scrollbar-thumb {
+        background: var(--ink);
+        border: 2px solid var(--cream);
       }
 
+      .sn {
+        font-family: "Space Grotesk", "Noto Sans JP", system-ui, sans-serif;
+      }
+      .mn {
+        font-family: "JetBrains Mono", "Noto Sans JP", ui-monospace, Menlo,
+          Consolas, monospace;
+      }
+      .jp {
+        font-family: "Noto Sans JP", "Hiragino Sans", sans-serif;
+      }
+      .jpd {
+        font-family: "Stick", "Noto Sans JP", sans-serif;
+      }
+
+      /* grid substrate — fine engineering paper */
+      .substrate {
+        background-color: var(--cream);
+        background-image: linear-gradient(
+            rgba(42, 37, 32, 0.07) 1px,
+            transparent 1px
+          ),
+          linear-gradient(90deg, rgba(42, 37, 32, 0.07) 1px, transparent 1px);
+        background-size: 22px 22px;
+      }
       #tv-container {
-        background-size: 100% 100%;
+        background-color: var(--cream);
+        background-image: linear-gradient(
+            rgba(42, 37, 32, 0.05) 1px,
+            transparent 1px
+          ),
+          linear-gradient(90deg, rgba(42, 37, 32, 0.05) 1px, transparent 1px);
+        background-size: 22px 22px;
       }
 
-      .vt323-regular {
-        font-family: "VT323", monospace;
-        font-weight: 400;
-        font-style: normal;
+      /* red registration corner brackets */
+      .brk {
+        position: absolute;
+        width: 22px;
+        height: 22px;
+        border: 0 solid var(--red);
+        z-index: 25;
+        pointer-events: none;
+      }
+      .brk-tl {
+        top: -3px;
+        left: -3px;
+        border-top-width: 3px;
+        border-left-width: 3px;
+      }
+      .brk-tr {
+        top: -3px;
+        right: -3px;
+        border-top-width: 3px;
+        border-right-width: 3px;
+      }
+      .brk-bl {
+        bottom: -3px;
+        left: -3px;
+        border-bottom-width: 3px;
+        border-left-width: 3px;
+      }
+      .brk-br {
+        bottom: -3px;
+        right: -3px;
+        border-bottom-width: 3px;
+        border-right-width: 3px;
       }
 
-      .iceland-regular {
-        font-family: "Iceland", sans-serif;
-        font-weight: 400;
-        font-style: normal;
-      }
-
-      .segment-display-bg {
-        background: linear-gradient(
-          135deg,
-          rgba(44, 24, 16, 0.95) 0%,
-          rgba(44, 24, 16, 0.85) 100%
+      /* CRT scanlines over the live screen */
+      .scanlines {
+        background: repeating-linear-gradient(
+          to bottom,
+          rgba(0, 0, 0, 0) 0px,
+          rgba(0, 0, 0, 0) 2px,
+          rgba(0, 0, 0, 0.16) 3px,
+          rgba(0, 0, 0, 0) 4px
         );
-        border: 2px solid rgba(232, 132, 74, 0.2);
-        border-radius: 12px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5),
-          inset 0 1px 0 rgba(232, 132, 74, 0.1),
-          inset 0 -1px 0 rgba(0, 0, 0, 0.3), 0 0 30px rgba(232, 132, 74, 0.1);
-        backdrop-filter: blur(4px);
-        transform: perspective(1000px) rotateX(2deg);
       }
 
-      .segment-display-text {
-        text-shadow: 0 0 10px rgba(232, 132, 74, 0.8),
-          0 0 20px rgba(232, 132, 74, 0.5);
+      /* blinking system dot */
+      @keyframes blink {
+        0%,
+        49% {
+          opacity: 1;
+        }
+        50%,
+        100% {
+          opacity: 0.25;
+        }
+      }
+      .live-dot {
+        animation: blink 1.2s steps(1) infinite;
+      }
+
+      /* HUD readout glow (kept subtle — light mode) */
+      .hud-readout {
+        text-shadow: 0 0 6px rgba(31, 136, 73, 0.35);
+      }
+
+      /* Famicom-style filter buttons */
+      .filter-btn {
+        transition: background-color 0.1s, color 0.1s, border-color 0.1s;
+      }
+      .filter-btn:hover {
+        background-color: var(--paper);
+      }
+      .filter-btn.filter-active,
+      .filter-btn.filter-active:hover {
+        background-color: var(--red);
+        color: var(--cream);
+        border-color: var(--red);
+        box-shadow: inset 0 0 0 2px var(--cream), 0 0 8px rgba(214, 56, 40, 0.4);
       }
     </style>
     <script>
@@ -74,15 +177,17 @@
         theme: {
           extend: {
             colors: {
-              dark: "#2A2A2A",
-              light: "#F0EDD5",
-              sand: "#E8E4D0",
-              eggplant: "#6B4423",
-              wood: "#2C1810",
-              orange: "#E8844A",
+              cream: "#E8DEC9",
+              paper: "#F1EBDA",
+              ink: "#2A2520",
+              red: "#D63828",
+              amber: "#E6B533",
+              green: "#1F8849",
+              blue: "#2D5BA0",
             },
-            backgroundImage: {
-              "tv-pattern": "url('images/tele-zone-libre.webp')",
+            fontFamily: {
+              sans: ["Space Grotesk", "Noto Sans JP", "system-ui", "sans-serif"],
+              mono: ["JetBrains Mono", "Noto Sans JP", "ui-monospace", "monospace"],
             },
           },
         },
@@ -101,10 +206,33 @@
         }
         return window.chartEmojis[ctx.dataIndex];
       };
+      // live clock for the AKARI OS status bar (decorative)
+      window.addEventListener("DOMContentLoaded", function () {
+        const pad = (n) => String(n).padStart(2, "0");
+        const tick = () => {
+          const el = document.getElementById("os-clock");
+          if (!el) return;
+          const d = new Date();
+          el.textContent =
+            d.getFullYear() +
+            "·" +
+            pad(d.getMonth() + 1) +
+            "·" +
+            pad(d.getDate()) +
+            " · " +
+            pad(d.getHours()) +
+            ":" +
+            pad(d.getMinutes()) +
+            ":" +
+            pad(d.getSeconds());
+        };
+        tick();
+        setInterval(tick, 1000);
+      });
     </script>
   </head>
   <body
-    class="bg-dark text-light justify-center items-center h-screen"
+    class="substrate sn text-ink justify-center items-center h-screen"
     _="
       on load
         repeat forever
@@ -115,43 +243,22 @@
     "
   >
     <div class="flex flex-col lg:flex-row w-full h-full">
-      <label for="tag-select" class="sr-only">Filtrer les chaînes</label>
-      <select
-        id="tag-select"
-        class="bg-light text-dark w-1/5 h-10 px-3 py-2 lg:fixed lg:block top-0 left-0 hidden"
-        autocomplete="off"
-        _="
-        on change
-          if event.target.value is 'all' then
-            show .channel in #card-container
-          else
-            set tagClass to '.tag-' + event.target.value
-            hide .channel in #card-container
-            show .channel in #card-container when it matches tagClass
-          end
-      "
-      >
-        <option value="all" selected>Tout voir</option>
-        <optgroup label="Langue">
-          <option value="fr">En français 🇫🇷</option>
-          <option value="en">En anglais 🇬🇧</option>
-        </optgroup>
-        <optgroup label="Contenu">
-          <option value="films">Films 🎬</option>
-          <option value="series">Séries 📀</option>
-          <option value="shows">Emissions 📺</option>
-          <option value="anime">Animation 🎨</option>
-        </optgroup>
-      </select>
       <nav
         id="cards-layout"
-        class="lg:mt-10 lg:mb-0 mb-1 lg:w-1/5 overflow-x-auto lg:overflow-y-auto"
+        class="lg:mt-8 lg:mb-8 lg:ml-8 mb-1 lg:w-1/5 overflow-x-auto lg:overflow-y-auto lg:border-2 lg:border-ink lg:bg-paper"
         _="init send loadData"
       >
+        <!-- Sidebar brand header (desktop) -->
+        <div
+          class="hidden lg:flex items-center justify-between bg-ink text-cream px-3 py-2 sticky top-0 z-10"
+        >
+          <span class="mn text-xs tracking-[0.25em]">資料 / CHANNELS</span>
+          <span class="mn text-[0.625rem] tracking-widest text-amber">REV.A</span>
+        </div>
         <div
           id="card-container"
           class="flex flex-row lg:flex-col"
-          _="on click 
+          _="on click
             if event.target.closest('.channel[data-channel-id]') then
               set clickedChannel to event.target.closest('.channel[data-channel-id]')
               zap(clickedChannel.dataset.channelId)
@@ -165,8 +272,8 @@
         class="w-full lg:w-4/5 relative h-full flex items-center justify-center"
       >
         <div
-          class="hidden lg:block absolute top-0 left-0 w-[80px] h-full bg-dark bg-opacity-0 hover-bg-opacity-70 cursor-w-resize z-10"
-          _="on click 
+          class="hidden lg:block absolute top-0 left-0 w-[80px] h-full bg-ink bg-opacity-0 hover:bg-opacity-5 cursor-w-resize z-10"
+          _="on click
               if #cards-layout's *width is '0px' then
                 transition #cards-layout width to 20%
                 transition #tv-container width to 80%
@@ -182,188 +289,253 @@
         ></div>
 
         <section
-          class="relative w-full h-full flex items-center justify-center lg:block hidden"
+          class="relative w-full h-full flex items-center justify-center lg:block hidden p-10"
         >
-          <summary
-            class="vt323-regular currently-playing text-orange absolute hidden lg:block top-0 left-0 right-[20%] px-[4rem] opacity-90 text-center text-4xl font-bold rounded-lg z-20 pointer-events-none truncate max-w-full leading-[1.2]"
-          ></summary>
+          <!-- The monitor: AKARI OS terminal -->
           <article
-            class="absolute inset-0 bg-eggplant p-8 border-[3rem] border-[#2C1810] right-[20%]"
-            style="border-style: solid double"
+            class="absolute inset-8 right-[22%] bg-paper border-2 border-ink flex flex-col"
           >
-            <video
-              class="w-full h-full object-contain bg-black"
-              id="tv-frame"
-              src="images/static.mp4"
-              controls
-              autoplay
-              muted
-              _="on startAt(startTime) 
-                set my currentTime to startTime
-                on ended
-                  zap(currentChannelId)
-              "
-            ></video>
+            <!-- registration corner brackets -->
+            <span class="brk brk-tl"></span>
+            <span class="brk brk-tr"></span>
+            <span class="brk brk-bl"></span>
+            <span class="brk brk-br"></span>
+
+            <!-- OS status bar -->
+            <div
+              class="mn flex items-center justify-between bg-ink text-cream px-3 py-1 text-[0.6875rem] tracking-[0.15em] shrink-0"
+            >
+              <span class="flex items-center gap-2">
+                <span
+                  class="live-dot inline-block w-2 h-2 bg-green"
+                ></span>
+                AKARI OS · v2.9.0 / システム作動中
+              </span>
+              <span id="os-clock" class="hidden md:inline">2026·05·21 · 00:00:00</span>
+            </div>
+
+            <!-- screen -->
+            <div class="relative flex-1 bg-ink p-2 m-3">
+              <video
+                class="w-full h-full object-contain bg-black"
+                id="tv-frame"
+                src="images/static.mp4"
+                controls
+                autoplay
+                muted
+                _="on startAt(startTime)
+                  set my currentTime to startTime
+                  on ended
+                    zap(currentChannelId)
+                "
+              ></video>
+              <div
+                class="scanlines absolute inset-2 pointer-events-none"
+              ></div>
+            </div>
+
+            <!-- bottom data ribbon : NOW PLAYING screen -->
+            <div
+              class="flex items-stretch gap-3 border-t-2 border-ink px-3 py-2.5 shrink-0"
+            >
+              <!-- left label -->
+              <div
+                class="mn flex flex-col justify-center text-[0.5625rem] leading-tight tracking-[0.2em] text-ink shrink-0"
+              >
+                <span>再生中</span>
+                <span>NOW</span>
+                <span>PLAYING</span>
+              </div>
+              <!-- the little screen -->
+              <div
+                class="relative flex-1 min-w-0 min-h-[2.75rem] bg-black border-2 border-ink overflow-hidden"
+              >
+                <div class="scanlines absolute inset-0 pointer-events-none"></div>
+                <div class="flex items-center h-full px-3">
+                  <span
+                    class="live-dot inline-block w-2 h-2 bg-green mr-2.5 shrink-0"
+                  ></span>
+                  <span
+                    class="currently-playing mn hud-readout text-green text-sm tracking-wide truncate"
+                  ></span>
+                </div>
+              </div>
+              <!-- right meta -->
+              <div
+                class="mn flex flex-col justify-center items-end text-[0.5625rem] leading-tight tracking-[0.15em] shrink-0"
+              >
+                <span class="text-red">● REC</span>
+                <span class="text-blue">CH.047</span>
+                <span class="text-ink">SIG OK</span>
+              </div>
+            </div>
           </article>
 
-          <!-- Right Border with Speaker -->
-          <svg
-            class="absolute right-0 top-0 h-full"
-            viewBox="0 0 200 1000"
-            preserveAspectRatio="none"
-            style="width: 20%"
+          <!-- Right HUD rail -->
+          <aside
+            class="absolute right-8 top-8 bottom-8 w-[18%] bg-paper border-2 border-ink flex flex-col"
           >
-            <!-- Background -->
-            <rect x="0" y="0" width="200" height="1000" fill="#6B4423" />
-
-            <!-- Speaker Grille (bottom) -->
-            <rect
-              x="25"
-              y="550"
-              width="150"
-              height="300"
-              rx="15"
-              fill="#2C1810"
-            />
-            <!-- Horizontal slots -->
-            <rect
-              x="40"
-              y="580"
-              width="120"
-              height="12"
-              rx="6"
-              fill="#6B4423"
-            />
-            <rect
-              x="40"
-              y="615"
-              width="120"
-              height="12"
-              rx="6"
-              fill="#6B4423"
-            />
-            <rect
-              x="40"
-              y="620"
-              width="120"
-              height="12"
-              rx="6"
-              fill="#6B4423"
-            />
-            <rect
-              x="40"
-              y="655"
-              width="120"
-              height="12"
-              rx="6"
-              fill="#6B4423"
-            />
-            <rect
-              x="40"
-              y="690"
-              width="120"
-              height="12"
-              rx="6"
-              fill="#6B4423"
-            />
-            <rect
-              x="40"
-              y="725"
-              width="120"
-              height="12"
-              rx="6"
-              fill="#6B4423"
-            />
-            <rect
-              x="40"
-              y="760"
-              width="120"
-              height="12"
-              rx="6"
-              fill="#6B4423"
-            />
-            <rect
-              x="40"
-              y="795"
-              width="120"
-              height="12"
-              rx="6"
-              fill="#6B4423"
-            />
-          </svg>
-
-          <!-- Channel Knob (top) - Separate SVG for proper aspect ratio -->
-          <svg
-            class="absolute z-10"
-            style="right: 5%; top: 8%; width: 10%; aspect-ratio: 1"
-            viewBox="-60 -60 120 120"
-          >
-            <!-- Outer skirt ring -->
-            <circle cx="0" cy="0" r="55" fill="#0a0a0a" />
-            <circle cx="0" cy="0" r="52" fill="#1a1a1a" />
-            <!-- Inner raised knob body -->
-            <circle cx="0" cy="0" r="48" fill="#151515" />
-            <!-- Hexagonal faceted top surface -->
-            <polygon
-              points="0,-44 38,-22 38,22 0,44 -38,22 -38,-22"
-              fill="#1a1a1a"
-            />
-            <!-- Indicator line - centered on facet at -30° -->
-            <g transform="rotate(-30)">
-              <rect
-                x="-4"
-                y="-42"
-                width="8"
-                height="24"
-                rx="1"
-                fill="#E8844A"
-              />
-            </g>
-          </svg>
-
-          <!-- Volume Knob (middle) - Separate SVG for proper aspect ratio -->
-          <svg
-            class="absolute z-10"
-            style="right: 5%; top: 32%; width: 10%; aspect-ratio: 1"
-            viewBox="-60 -60 120 120"
-          >
-            <!-- Outer skirt ring -->
-            <circle cx="0" cy="0" r="55" fill="#0a0a0a" />
-            <circle cx="0" cy="0" r="52" fill="#1a1a1a" />
-            <!-- Inner raised knob body -->
-            <circle cx="0" cy="0" r="48" fill="#151515" />
-            <!-- Hexagonal faceted top surface -->
-            <polygon
-              points="0,-44 38,-22 38,22 0,44 -38,22 -38,-22"
-              fill="#1a1a1a"
-            />
-            <!-- Indicator line - centered on facet at 30° -->
-            <g transform="rotate(30)">
-              <rect
-                x="-4"
-                y="-42"
-                width="8"
-                height="24"
-                rx="1"
-                fill="#E8844A"
-              />
-            </g>
-          </svg>
-
-          <!-- Segment Display for Watch Time -->
-          <div
-            class="segment-display-bg absolute right-[1%] bottom-[3%] w-[18%] z-30 cursor-pointer"
-            _="on click showWatchTimeModal()"
-          >
+            <!-- CHANNEL FILTER (high-tech selector) -->
             <div
-              id="watch-time-display"
-              class="segment-display-text iceland-regular text-light text-2xl font-bold py-3 text-center"
+              class="mn bg-ink text-cream px-2 py-1 text-[0.625rem] tracking-[0.15em] shrink-0 flex items-center justify-between"
             >
-              0J-0H-0M
+              <span>選別 / FILTER</span>
+              <span class="text-amber">索引</span>
             </div>
-          </div>
+            <div
+              id="tag-select"
+              class="p-2 shrink-0 border-b-2 border-ink grid grid-cols-2 gap-1.5"
+              _="on click
+                  set btn to event.target.closest('[data-filter]')
+                  if no btn then halt end
+                  remove .filter-active from <.filter-btn/> in me
+                  add .filter-active to btn
+                  set val to btn.dataset.filter
+                  if val is 'all' then
+                    show .channel in #card-container
+                  else
+                    set tagClass to '.tag-' + val
+                    hide .channel in #card-container
+                    show .channel in #card-container when it matches tagClass
+                  end
+              "
+            >
+              <button
+                type="button"
+                data-filter="all"
+                class="filter-btn filter-active mn col-span-2 flex items-center justify-center gap-2 bg-cream text-ink border-2 border-ink py-1.5 text-[0.6875rem] tracking-[0.15em] cursor-pointer"
+              >
+                <span class="text-base leading-none">全</span>TOUT VOIR
+              </button>
+              <button
+                type="button"
+                data-filter="fr"
+                class="filter-btn mn flex flex-col items-center justify-center gap-0.5 bg-cream text-ink border-2 border-ink py-1.5 text-[0.625rem] tracking-wide cursor-pointer"
+              >
+                <span class="text-base leading-none">🇫🇷</span>FR
+              </button>
+              <button
+                type="button"
+                data-filter="en"
+                class="filter-btn mn flex flex-col items-center justify-center gap-0.5 bg-cream text-ink border-2 border-ink py-1.5 text-[0.625rem] tracking-wide cursor-pointer"
+              >
+                <span class="text-base leading-none">🇬🇧</span>EN
+              </button>
+              <button
+                type="button"
+                data-filter="films"
+                class="filter-btn mn flex flex-col items-center justify-center gap-0.5 bg-cream text-ink border-2 border-ink py-1.5 text-[0.625rem] tracking-wide cursor-pointer"
+              >
+                <span class="text-base leading-none">🎬</span>FILMS
+              </button>
+              <button
+                type="button"
+                data-filter="series"
+                class="filter-btn mn flex flex-col items-center justify-center gap-0.5 bg-cream text-ink border-2 border-ink py-1.5 text-[0.625rem] tracking-wide cursor-pointer"
+              >
+                <span class="text-base leading-none">📀</span>SÉRIES
+              </button>
+              <button
+                type="button"
+                data-filter="shows"
+                class="filter-btn mn flex flex-col items-center justify-center gap-0.5 bg-cream text-ink border-2 border-ink py-1.5 text-[0.625rem] tracking-wide cursor-pointer"
+              >
+                <span class="text-base leading-none">📺</span>SHOWS
+              </button>
+              <button
+                type="button"
+                data-filter="anime"
+                class="filter-btn mn flex flex-col items-center justify-center gap-0.5 bg-cream text-ink border-2 border-ink py-1.5 text-[0.625rem] tracking-wide cursor-pointer"
+              >
+                <span class="text-base leading-none">🎨</span>ANIME
+              </button>
+            </div>
 
-          <!-- Mobile video (full screen, no TV frame) -->
+            <div
+              class="mn bg-ink text-cream px-2 py-1 text-[0.625rem] tracking-[0.15em] shrink-0"
+            >
+              VITAL / 生命兆候
+            </div>
+
+            <div class="mn p-2 text-[0.625rem] text-ink space-y-2 grow overflow-y-auto min-h-0">
+              <!-- PWR bar -->
+              <div class="flex items-center justify-between">
+                <span>PWR</span><span>87.4%</span>
+              </div>
+              <div class="h-2 border border-ink">
+                <div class="h-full bg-green" style="width: 87%"></div>
+              </div>
+
+              <!-- status dots -->
+              <div class="pt-1 space-y-1.5">
+                <div class="flex items-center justify-between">
+                  <span class="flex items-center gap-1.5"
+                    ><span class="w-2 h-2 bg-green inline-block"></span>SIG</span
+                  ><span>OK</span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <span class="flex items-center gap-1.5"
+                    ><span class="w-2 h-2 bg-green inline-block"></span>NET</span
+                  ><span>ACTIVE</span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <span class="flex items-center gap-1.5"
+                    ><span class="w-2 h-2 bg-amber inline-block"></span>ENC</span
+                  ><span>PARTIAL</span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <span class="flex items-center gap-1.5"
+                    ><span class="w-2 h-2 bg-red inline-block"></span>ALR</span
+                  ><span>WARN</span>
+                </div>
+              </div>
+
+              <!-- mini-map -->
+              <div class="pt-2">
+                <div class="text-[0.5625rem] tracking-widest mb-1">地図 / MAP</div>
+                <div
+                  class="relative border border-ink aspect-square"
+                  style="
+                    background-image: linear-gradient(
+                        rgba(42, 37, 32, 0.25) 1px,
+                        transparent 1px
+                      ),
+                      linear-gradient(
+                        90deg,
+                        rgba(42, 37, 32, 0.25) 1px,
+                        transparent 1px
+                      );
+                    background-size: 12px 12px;
+                  "
+                >
+                  <span
+                    class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 border border-red"
+                  ></span>
+                  <span
+                    class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-1 h-1 bg-red"
+                  ></span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Watch-time HUD readout (opens stats modal) -->
+            <div
+              class="shrink-0 border-t-2 border-ink cursor-pointer hover:bg-cream"
+              _="on click showWatchTimeModal()"
+            >
+              <div class="mn px-2 pt-1 text-[0.5625rem] tracking-widest text-ink">
+                視聴 / WATCH
+              </div>
+              <div
+                id="watch-time-display"
+                class="mn hud-readout text-green text-xl tracking-wider px-2 pb-2 text-center"
+              >
+                0J-0H-0M
+              </div>
+            </div>
+          </aside>
+
+          <!-- Mobile video (full screen, no frame) -->
           <article class="lg:hidden relative w-full h-full">
             <video
               class="absolute top-0 left-0 w-full h-full object-contain bg-black"
@@ -372,14 +544,14 @@
               controls
               autoplay
               muted
-              _="on startAt(startTime) 
+              _="on startAt(startTime)
               set my currentTime to startTime
               on ended
                 zap(currentChannelId)
             "
             ></video>
             <h1
-              class="currently-playing absolute bottom-4 left-1/2 -translate-x-1/2 bg-dark text-light opacity-80 text-center text-xl font-bold px-4 py-2 rounded-lg z-20 pointer-events-none truncate max-w-full leading-[1.2]"
+              class="currently-playing mn absolute bottom-4 left-1/2 -translate-x-1/2 bg-ink text-amber text-center text-base px-4 py-2 z-20 pointer-events-none truncate max-w-full leading-[1.3] border-l-4 border-red"
             ></h1>
           </article>
         </section>
@@ -389,25 +561,26 @@
     <!-- Templates -->
     <template id="channel-template">
       <div
-        class="cursor-pointer opacity-70 hover:opacity-90 channel group"
+        class="cursor-pointer opacity-70 hover:opacity-90 channel group relative bg-paper"
         data-channel-id=""
         title=""
       >
         <div
-          class="flex items-center gap-3 p-2 bg-light border-b border-dark border-opacity-20"
+          class="flex items-center gap-3 p-2 border-b-2 border-ink border-opacity-100"
         >
+          <span class="absolute left-0 top-0 bottom-0 w-1 bg-red opacity-0 group-hover:opacity-100"></span>
           <div class="flex-1 min-w-0">
             <h3
-              class="channel-title text-lg font-sans font-normal text-dark mb-1"
+              class="channel-title sn text-lg font-medium text-ink mb-0.5 truncate"
             ></h3>
             <p
-              class="channel-subtitle text-sm font-sans italic text-dark opacity-80 line-clamp-2 group-hover:line-clamp-none"
+              class="channel-subtitle mn text-xs text-ink opacity-70 line-clamp-2 group-hover:line-clamp-none"
             ></p>
           </div>
           <img
             src=""
             alt=""
-            class="channel-image w-16 h-16 object-cover flex-shrink-0"
+            class="channel-image w-16 h-16 object-cover flex-shrink-0 border border-ink"
           />
         </div>
       </div>
@@ -417,26 +590,27 @@
       <a
         href=""
         target="_blank"
-        class="block channel cursor-alias opacity-70 hover:opacity-90 group"
+        class="block channel cursor-alias opacity-70 hover:opacity-90 group relative bg-paper"
       >
         <div
-          class="flex items-center gap-3 p-2 bg-light border-b border-dark border-opacity-20"
+          class="flex items-center gap-3 p-2 border-b-2 border-ink border-opacity-100"
         >
+          <span class="absolute left-0 top-0 bottom-0 w-1 bg-blue opacity-0 group-hover:opacity-100"></span>
           <div class="flex-1 min-w-0">
             <h3
-              class="channel-title text-lg font-sans font-normal text-dark mb-1"
+              class="channel-title sn text-lg font-medium text-ink mb-0.5 truncate"
             ></h3>
             <p
-              class="channel-subtitle text-sm font-sans italic text-dark opacity-80 line-clamp-2 group-hover:line-clamp-none"
+              class="channel-subtitle mn text-xs text-ink opacity-70 line-clamp-2 group-hover:line-clamp-none"
             ></p>
-            <span class="text-xs text-dark opacity-50 mt-1 inline-block external-link-text"
+            <span class="mn text-[0.625rem] text-blue opacity-80 mt-1 inline-block tracking-wider external-link-text"
               >Not hosted here ⇾</span
             >
           </div>
           <img
             src=""
             alt=""
-            class="channel-image w-16 h-16 object-cover flex-shrink-0"
+            class="channel-image w-16 h-16 object-cover flex-shrink-0 border border-ink"
           />
         </div>
       </a>
@@ -445,26 +619,35 @@
     <!-- Watch Time Modal -->
     <div
       id="watch-time-modal"
-      class="hidden fixed inset-0 bg-dark bg-opacity-90 z-50 flex items-center justify-center"
+      class="hidden fixed inset-0 bg-ink bg-opacity-80 z-50 flex items-center justify-center"
       _="on click if event.target is me then add .hidden to me end"
     >
       <div
-        class="bg-eggplant rounded-lg p-8 pb-4 max-w-2xl w-full mx-4 relative"
+        class="bg-paper border-2 border-ink p-8 pb-4 max-w-2xl w-full mx-4 relative"
         _="on click halt"
       >
-        <button
-          class="absolute top-4 right-4 text-light hover:text-sand text-2xl font-bold"
-          _="on click add .hidden to #watch-time-modal"
+        <span class="brk brk-tl"></span>
+        <span class="brk brk-tr"></span>
+        <span class="brk brk-bl"></span>
+        <span class="brk brk-br"></span>
+        <div
+          class="mn flex items-center justify-between bg-ink text-cream -mx-8 -mt-8 px-4 py-1 text-[0.6875rem] tracking-[0.15em]"
         >
-          ×
-        </button>
-        <h2 class="vt323-regular text-light text-3xl mb-6 text-center">
-          Temps de visionnage
+          <span>視聴時間 / WATCH TIME</span>
+          <button
+            class="text-cream hover:text-amber text-lg font-bold leading-none"
+            _="on click add .hidden to #watch-time-modal"
+          >
+            ×
+          </button>
+        </div>
+        <h2 class="sn text-ink text-3xl font-medium my-6 text-center tracking-tight">
+          資料集 · STATISTIQUES
         </h2>
         <div id="pie-chart-container" class="flex justify-center mb-6">
           <canvas id="pie-chart" width="400" height="400"></canvas>
         </div>
-        <table id="stats-table" class="text-light w-full text-lg">
+        <table id="stats-table" class="mn text-ink w-full text-sm">
           <tr>
             <td class="py-2">🇫🇷 Français</td>
             <td id="stat-fr" class="py-2 text-right">0%</td>
@@ -480,22 +663,22 @@
             <td id="stat-shows" class="py-2 text-right">0%</td>
           </tr>
         </table>
-        <p class="text-light text-sm mt-2 text-center opacity-70">
-         <ul class="list-none text-light text-medium mt-6 text-center opacity-70">
+        <div class="border-t border-ink border-opacity-30 mt-4 pt-2">
+         <ul class="mn list-none text-ink text-xs mt-2 text-center opacity-70 space-y-1">
           <li>
-            Anti-(c)opyright Zone Libre 2025 - All rites reversed
+            Anti-(c)opyright Zone Libre 2025 — All rites reversed
           </li>
           <li>
             Made with
-            <a href="https://hyperscript.org" target="_blank" class="underline hover:opacity-90">hyperscript</a>
-            (it sounded like a fun time) <3
+            <a href="https://hyperscript.org" target="_blank" class="underline text-blue hover:opacity-90">hyperscript</a>
+            (it sounded like a fun time) &lt;3
           </li>
          </ul>
-        </p>
-        <p id="privacy-notice" class="text-light text-sm mt-3 text-center opacity-70">
+        </div>
+        <p id="privacy-notice" class="mn text-ink text-xs mt-3 text-center opacity-60">
           Statistics are stored only in your browser. No data is collected, stored, or processed on the server. No tracking or analytics services are used.
         </p>
-        <p id="shrug-emoji" class="text-light text-4xl mt-2 text-center opacity-70">🤷</p>
+        <p id="shrug-emoji" class="text-ink text-4xl mt-2 text-center opacity-70">🤷</p>
       </div>
     </div>
   </body>

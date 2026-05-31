@@ -187,7 +187,7 @@ def drawPieChart()
   
   -- Prepare data for Chart.js
   set values to []
-  set colors to ["#FF6B6B", "#4ECDC4", "#FFE66D", "#95E1D3", "#F38181", "#AA96DA", "#FCBAD3", "#A8D8EA", "#FF9F43", "#6C5CE7", "#00B894", "#FD79A8", "#74B9FF", "#FFEAA7", "#DFE6E9"]
+  set colors to ["#D63828", "#2D5BA0", "#1F8849", "#E6B533", "#2A2520", "#A8462C", "#3A6FB0", "#2E9659", "#C99B2E", "#6B5D4F", "#E86A4A", "#5B86C0", "#3FA56B", "#D4C36A", "#8A7D6F"]
   set bgColors to []
   set titles to []
   set emojis to []
@@ -219,7 +219,7 @@ def drawPieChart()
       label: "Minutes",
       data: values,
       backgroundColor: bgColors,
-      borderColor: "#110B16",
+      borderColor: "#E8DEC9",
       borderWidth: 2,
       hoverOffset: 8
     }]
@@ -240,7 +240,7 @@ def drawPieChart()
           font: {
             size: 24
           },
-          color: "#110B16"
+          color: "#2A2520"
         }
       }
     }
