@@ -357,8 +357,12 @@ def template()
       put channel.title into newChannel.querySelector('.channel-title')
       put channel.description into newChannel.querySelector('.channel-subtitle')
       set imgEl to newChannel.querySelector('.channel-image')
-      set imgEl.src to channel.image
-      set imgEl.alt to channel.title
+      if channel.image then
+        set imgEl.src to channel.image
+        set imgEl.alt to channel.title
+      else
+        remove imgEl
+      end
       -- Update external link text with platform config
       if global platformConfig exists then
         put platformConfig.platformExternalLinkText into newChannel.querySelector('.external-link-text')
@@ -377,8 +381,12 @@ def template()
       put channel.title into newChannel.querySelector('.channel-title')
       put channel.description into newChannel.querySelector('.channel-subtitle')
       set imgEl to newChannel.querySelector('.channel-image')
-      set imgEl.src to channel.image
-      set imgEl.alt to channel.title
+      if channel.image then
+        set imgEl.src to channel.image
+        set imgEl.alt to channel.title
+      else
+        remove imgEl
+      end
       put templateEl at the end of #card-container
     end
   end
