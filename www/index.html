@@ -243,11 +243,47 @@
     "
   >
     <div class="flex flex-col lg:flex-row w-full h-full">
+      <!-- Mobile collapsed channel bar : shows current channel, tap to open -->
+      <button
+        id="mobile-channel-bar"
+        type="button"
+        class="lg:hidden flex items-center gap-3 w-full bg-ink text-cream px-3 py-2 border-b-2 border-red text-left shrink-0"
+        _="on click openNav()"
+      >
+        <span class="mn text-[0.625rem] tracking-[0.2em] text-amber shrink-0">資料</span>
+        <img
+          id="mobile-current-image"
+          src=""
+          alt=""
+          class="w-9 h-9 object-cover border border-cream shrink-0"
+        />
+        <span
+          id="mobile-current-title"
+          class="sn text-sm truncate flex-1"
+        ></span>
+        <span class="mn text-[0.625rem] tracking-[0.2em] text-amber shrink-0"
+          >▾ CANAUX</span
+        >
+      </button>
+
       <nav
         id="cards-layout"
-        class="lg:mt-8 lg:mb-8 lg:ml-8 mb-1 lg:w-1/5 overflow-x-auto lg:overflow-y-auto lg:border-2 lg:border-ink lg:bg-paper"
+        class="hidden fixed inset-0 z-40 bg-paper overflow-y-auto lg:block lg:static lg:inset-auto lg:z-auto lg:mt-8 lg:mb-8 lg:ml-8 lg:w-1/5 lg:overflow-y-auto lg:border-2 lg:border-ink lg:bg-paper"
         _="init send loadData"
       >
+        <!-- Mobile nav header (close) -->
+        <div
+          class="lg:hidden flex items-center justify-between bg-ink text-cream px-3 py-2 sticky top-0 z-10"
+        >
+          <span class="mn text-xs tracking-[0.25em]">資料 / CANAUX</span>
+          <button
+            type="button"
+            class="text-cream hover:text-amber text-2xl leading-none px-1"
+            _="on click closeNav()"
+          >
+            ✕
+          </button>
+        </div>
         <!-- Sidebar brand header (desktop) -->
         <div
           class="hidden lg:flex items-center justify-between bg-ink text-cream px-3 py-2 sticky top-0 z-10"
@@ -257,19 +293,20 @@
         </div>
         <div
           id="card-container"
-          class="flex flex-row lg:flex-col"
+          class="flex flex-col"
           _="on click
-            if event.target.closest('.channel[data-channel-id]') then
-              set clickedChannel to event.target.closest('.channel[data-channel-id]')
+            set clickedChannel to event.target.closest('.channel[data-channel-id]')
+            if clickedChannel then
               zap(clickedChannel.dataset.channelId)
             end
+            if event.target.closest('.channel') then closeNav() end
           "
         ></div>
       </nav>
 
       <main
         id="tv-container"
-        class="w-full lg:w-4/5 relative h-full flex items-center justify-center"
+        class="w-full lg:w-4/5 relative flex-1 min-h-0 lg:flex-none lg:h-full flex items-center justify-center"
       >
         <div
           class="hidden lg:block absolute top-0 left-0 w-[80px] h-full bg-ink bg-opacity-0 hover:bg-opacity-5 cursor-w-resize z-10"
@@ -535,26 +572,27 @@
             </div>
           </aside>
 
-          <!-- Mobile video (full screen, no frame) -->
-          <article class="lg:hidden relative w-full h-full">
-            <video
-              class="absolute top-0 left-0 w-full h-full object-contain bg-black"
-              id="tv-frame-mobile"
-              src="images/static.mp4"
-              controls
-              autoplay
-              muted
-              _="on startAt(startTime)
-              set my currentTime to startTime
-              on ended
-                zap(currentChannelId)
-            "
-            ></video>
-            <h1
-              class="currently-playing mn absolute bottom-4 left-1/2 -translate-x-1/2 bg-ink text-amber text-center text-base px-4 py-2 z-20 pointer-events-none truncate max-w-full leading-[1.3] border-l-4 border-red"
-            ></h1>
-          </article>
         </section>
+
+        <!-- Mobile video (full width, no frame) -->
+        <article class="lg:hidden w-full h-full flex flex-col">
+          <video
+            class="flex-1 min-h-0 w-full object-contain bg-black"
+            id="tv-frame-mobile"
+            src="images/static.mp4"
+            controls
+            autoplay
+            muted
+            _="on startAt(startTime)
+            set my currentTime to startTime
+            on ended
+              zap(currentChannelId)
+          "
+          ></video>
+          <h1
+            class="currently-playing mn shrink-0 bg-ink text-amber text-center text-base px-4 py-2 truncate leading-[1.3] border-t-4 border-red"
+          ></h1>
+        </article>
       </main>
     </div>
 

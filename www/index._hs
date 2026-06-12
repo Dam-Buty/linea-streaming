@@ -29,6 +29,15 @@ on loadData
     end
     updateWatchTimeDisplay()
 
+def openNav()
+  remove .hidden from #cards-layout
+  set #cards-layout.scrollTop to 0
+end
+
+def closeNav()
+  add .hidden to #cards-layout
+end
+
 def formatWatchTime(minutes)
   set days to Math.floor(minutes / 1440)
   set hours to Math.floor((minutes mod 1440) / 60)
@@ -114,6 +123,14 @@ def zap(id)
     set #tv-frame-mobile.src to channel.videos[videoCursor].url
     set #tv-frame-mobile.currentTime to videoOffset
     put channel.videos[videoCursor].title into .currently-playing
+    -- Update the mobile collapsed channel bar
+    put channel.title into #mobile-current-title
+    if channel.image then
+      set #mobile-current-image.src to channel.image
+      remove .hidden from #mobile-current-image
+    else
+      add .hidden to #mobile-current-image
+    end
     updateWatchTimeDisplay()
   end
 end
