@@ -164,6 +164,11 @@
       .filter-btn:hover {
         background-color: var(--paper);
       }
+      /* currently watching channel — persistent green marker */
+      .channel.active-channel > div > span {
+        background-color: var(--green);
+        opacity: 1;
+      }
       .filter-btn.filter-active,
       .filter-btn.filter-active:hover {
         background-color: var(--red);

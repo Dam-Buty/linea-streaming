@@ -98,6 +98,7 @@ def zap(id)
     for channelCard in #card-container.querySelectorAll('.channel')
       remove .line-clamp-none from channelCard.querySelector('.channel-subtitle')
       remove .opacity-90 from channelCard
+      remove .active-channel from channelCard
       add .opacity-70 to channelCard
     end
     
@@ -107,6 +108,7 @@ def zap(id)
     if currentCard exists then
       remove .opacity-70 from currentCard
       add .opacity-90 to currentCard
+      add .active-channel to currentCard
       add .line-clamp-none to currentCard.querySelector('.channel-subtitle')
     end
     
